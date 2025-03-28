@@ -1,0 +1,9 @@
+CREATE STREAMING LIVE TABLE customers
+COMMENT "Customers, ingested from /databricks-datasets/retail-org/."
+TBLPROPERTIES ("quality" = "bronze") 
+AS 
+SELECT _metadata.file_modification_time AS capture_timestamp,
+       current_timestamp() load_timestamp,      
+       _metadata.file_path AS extract_path,
+       *      
+  FROM cloud_files("/databricks-datasets/retail-org/customers/", "csv", map("cloudFiles.inferColumnTypes", "true"));

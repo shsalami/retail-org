@@ -1,0 +1,25 @@
+CREATE WIDGET TEXT acatalog DEFAULT "lhdev";  
+CREATE WIDGET TEXT bschema DEFAULT "raw_retail";
+CREATE WIDGET TEXT sschema DEFAULT "hs_retail";
+
+use catalog ${acatalog};
+use schema ${sschema};
+
+MERGE INTO hub_product hp
+USING (select capture_timestamp,
+              product_id, 
+              product_name,
+              product_category,
+              product_unit              
+         from ${bschema}.products
+        where capture_timestamp > (select max(capture_timestamp) from hub_product where load_source in (0,1))) p
+ON hp.product_id = p.product_id and hp.load_source = 1
+WHEN MATCHED and (hp.product_name <> p.product_name or hp.product_category <> p.product_category or hp.product_unit <> p.product_unit) THEN 
+  UPDATE SET hp.capture_timestamp = p.capture_timestamp,
+             hp.load_timestamp = current_timestamp(),
+             hp.product_name = p.product_name,
+             hp.product_category = p.product_category,
+             hp.product_unit = p.product_unit
+WHEN NOT MATCHED THEN 
+  INSERT (load_source, capture_timestamp, load_timestamp, initial_capture_timestamp, product_key, product_id, product_name, product_category, product_unit) 
+  VALUES (1, p.capture_timestamp, current_timestamp(), p.capture_timestamp, p.product_id, concat_ws('#', 1, p.product_id), p.product_name, p.product_category, p.product_unit);

@@ -1,0 +1,15 @@
+CREATE WIDGET TEXT acatalog DEFAULT "lhdev";  
+CREATE WIDGET TEXT sschema DEFAULT "hs_retail";
+CREATE WIDGET TEXT gschema DEFAULT "ss_retail";
+
+use catalog ${acatalog};
+use schema ${gschema};
+
+create or replace view dim_product as
+select product_key, 
+       load_source product_source, 
+       product_id, 
+       product_name, 
+       product_category, 
+       product_unit
+  from ${sschema}.hub_product;

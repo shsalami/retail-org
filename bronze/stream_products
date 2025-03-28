@@ -1,0 +1,11 @@
+CREATE STREAMING LIVE TABLE products
+COMMENT "Products, ingested from /databricks-datasets/retail-org/."
+TBLPROPERTIES ("quality" = "bronze", 
+               "delta.columnMapping.mode" = "name",
+               "delta.minReaderVersion" = '2',
+               "delta.minWriterVersion" = '5') AS 
+SELECT _metadata.file_modification_time AS capture_timestamp,
+       current_timestamp() load_timestamp,      
+       _metadata.file_path AS extract_path,
+        *   
+  FROM cloud_files("/databricks-datasets/retail-org/products/", "csv", map("cloudFiles.inferColumnTypes", "true", "header", "true", "delimiter", ';'));

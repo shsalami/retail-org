@@ -1,0 +1,22 @@
+create materialized view dim_customer2 as
+with sca as (
+select *
+  from (select *, row_number() over(partition by customer_key, valid_from
+                                    order by capture_timestamp desc) as rn
+          from ${acatalog}.${sschema}.star_customer_address
+       )
+ Where rn = 1
+)
+select concat_ws('#', hc.customer_key, sca.valid_from) customer2_key,
+       hc.customer_id,
+       hc.customer_name, 
+       hc.tax_id,
+       hc.tax_code,
+       hls.loyalty_segment_id,
+       hls.loyalty_segment_description,
+       sca.ship_to_address,
+       sca.valid_from,
+       sca.valid_to
+from ${acatalog}.${sschema}.hub_customer hc
+  left join ${acatalog}.${sschema}.hub_loyalty_segment hls on hc.loyalty_segment_key = hls.loyalty_segment_key
+  left join sca on hc.customer_key = sca.customer_key;

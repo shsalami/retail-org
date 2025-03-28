@@ -1,0 +1,18 @@
+CREATE OR REFRESH STREAMING TABLE star_customer_address 
+( load_source INT,
+  capture_timestamp TIMESTAMP,
+  load_timestamp TIMESTAMP,
+  customer_key STRING,
+  valid_from TIMESTAMP,
+  valid_to TIMESTAMP,
+  ship_to_address STRING,
+  CONSTRAINT valid_customer_address EXPECT (customer_key IS NOT NULL and ship_to_address IS NOT NULL) ON VIOLATION DROP ROW,
+  CONSTRAINT pk_star_customer_address primary key (customer_key, valid_from, capture_timestamp)
+)
+AS 
+SELECT 1 load_source, capture_timestamp, current_timestamp() load_timestamp,
+       sha2(cast(customer_id as string), 256) as customer_key,        
+       TIMESTAMP(from_unixtime(cast(valid_from as long))) valid_from, 
+       TIMESTAMP(from_unixtime(cast(valid_to as long))) valid_to,
+       ship_to_address       
+  FROM STREAM(${acatalog}.${bschema}.customers)

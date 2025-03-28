@@ -1,0 +1,20 @@
+CREATE OR REFRESH STREAMING TABLE star_sales_order_item  
+( load_source INT,
+  capture_timestamp TIMESTAMP,
+  load_timestamp TIMESTAMP,
+  sales_order_key STRING not null,
+  order_datetime TIMESTAMP,
+  sales_order_item_seq INT,
+  product_key STRING,
+  price BIGINT,
+  currency STRING,
+  qty INT,
+  CONSTRAINT pk_star_sales_order_item primary key (sales_order_key, sales_order_item_seq)
+) as
+SELECT 1 load_source, so.capture_timestamp, current_timestamp() load_timestamp,      
+       concat_ws('#', 1, so.order_number) sales_order_key, 
+       TIMESTAMP(from_unixtime(cast(so.order_datetime as long))) order_datetime,
+       op.item_seq as sales_order_item_seq,
+       concat_ws('#', 1, op.item.id) product_key,       
+       op.item.price, op.item.curr currency, cast(op.item.qty as int) qty       
+  FROM STREAM(${acatalog}.${bschema}.sales_orders) so LATERAL VIEW explode(transform(ordered_products,(x,i)-> struct(x as item,(i+1) as item_seq))) as op;

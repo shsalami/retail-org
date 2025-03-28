@@ -1,0 +1,14 @@
+create materialized view fact_sales_order_item as
+select soi.sales_order_key,
+       soi.sales_order_item_seq,
+       hso.sales_order_number, 
+       soi.order_datetime,
+       hso.customer_key,
+       dc.customer2_key,
+       soi.product_key,
+       soi.price,
+       soi.currency, 
+       soi.qty
+  from ${acatalog}.${sschema}.star_sales_order_item soi
+  join ${acatalog}.${sschema}.hub_sales_order hso on soi.sales_order_key = hso.sales_order_key
+  left join dim_customer2 dc on hso.order_datetime between dc.valid_from and dc.valid_to;

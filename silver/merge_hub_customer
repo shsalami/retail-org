@@ -1,0 +1,29 @@
+CREATE WIDGET TEXT acatalog DEFAULT "lhdev";  
+CREATE WIDGET TEXT bschema DEFAULT "raw_retail";
+CREATE WIDGET TEXT sschema DEFAULT "hs_retail";
+
+use catalog ${acatalog};
+use schema ${sschema};
+
+MERGE INTO hub_customer hc
+USING (select capture_timestamp,
+              customer_id, 
+              customer_name,
+              tax_id,
+              tax_code,
+              loyalty_segment
+         from ${acatalog}.${bschema}.customers
+        where capture_timestamp > (select max(capture_timestamp) from hub_customer)) c
+ ON hc.customer_id = c.customer_id 
+WHEN MATCHED and (hc.customer_name <> c.customer_name or hc.tax_id <> c.tax_id or hc.tax_code <> c.tax_code or
+                  hc.loyalty_segment_key <> c.loyalty_segment
+                 ) THEN
+  UPDATE SET hc.capture_timestamp = c.capture_timestamp,
+             hc.load_timestamp = current_timestamp(),
+             hc.customer_name = c.customer_name,
+             hc.tax_id = c.tax_id,
+             hc.tax_code = c.tax_code,
+             hc.loyalty_segment_key = c.loyalty_segment
+WHEN NOT MATCHED THEN 
+  INSERT (load_source, capture_timestamp, load_timestamp, initial_capture_timestamp, customer_key, customer_id, customer_name,  tax_id, tax_code, loyalty_segment_key) 
+  VALUES (1, c.capture_timestamp, current_timestamp(), c.capture_timestamp, sha2(cast(customer_id as string), 256), c.customer_id, c.customer_name, c.tax_id, c.tax_code, loyalty_segment);

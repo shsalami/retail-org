@@ -1,0 +1,21 @@
+CREATE WIDGET TEXT acatalog DEFAULT "lhdev";  
+CREATE WIDGET TEXT bschema DEFAULT "raw_retail";
+CREATE WIDGET TEXT sschema DEFAULT "hs_retail";
+
+use catalog ${acatalog};
+use schema ${sschema};
+
+MERGE INTO hub_loyalty_segment hls
+USING (select capture_timestamp,
+              loyalty_segment_id, 
+              loyalty_segment_description
+         from ${bschema}.loyalty_segments
+        where capture_timestamp > (select max(capture_timestamp) from hub_loyalty_segment)) ls        
+ON hls.loyalty_segment_id = ls.loyalty_segment_id
+WHEN MATCHED and (hls.loyalty_segment_description <> ls.loyalty_segment_description) THEN
+  UPDATE SET hls.capture_timestamp = ls.capture_timestamp,
+             hls.load_timestamp = current_timestamp(),             
+             hls.loyalty_segment_description = ls.loyalty_segment_description
+WHEN NOT MATCHED THEN 
+  INSERT (load_source, capture_timestamp, load_timestamp, initial_capture_timestamp, loyalty_segment_key, loyalty_segment_id, loyalty_segment_description) 
+  VALUES (1, ls.capture_timestamp, current_timestamp(), ls.capture_timestamp, ls.loyalty_segment_id, ls.loyalty_segment_id, ls.loyalty_segment_description);

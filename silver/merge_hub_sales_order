@@ -1,0 +1,24 @@
+CREATE WIDGET TEXT acatalog DEFAULT "lhdev";  
+CREATE WIDGET TEXT bschema DEFAULT "gld_sbx_ded";
+CREATE WIDGET TEXT sschema DEFAULT "gld_sbx_ded";
+
+use catalog ${acatalog};
+use schema ${sschema};
+
+MERGE INTO hub_sales_order hso
+USING (select capture_timestamp,
+              order_number, 
+              customer_id,
+              TIMESTAMP(from_unixtime(cast(order_datetime as long))) as order_datetime
+         from ${bschema}.sales_orders
+        where capture_timestamp > (select max(capture_timestamp) from hub_sales_order)) so
+  ON hso.sales_order_number = so.order_number 
+ and hso.order_datetime = so.order_datetime 
+ and hso.load_source = 1
+WHEN MATCHED and hso.customer_key <> sha2(customer_id, 256) THEN
+  UPDATE SET hso.capture_timestamp = so.capture_timestamp,
+             hso.load_timestamp = current_timestamp(),
+             hso.customer_key = coalesce(sha2(cast(customer_id as string), 256), '-1')
+WHEN NOT MATCHED THEN 
+  INSERT (load_source, capture_timestamp, load_timestamp, initial_capture_timestamp, sales_order_key, sales_order_number, order_datetime, customer_key) 
+  VALUES (1, so.capture_timestamp, current_timestamp(), so.capture_timestamp, concat_ws('#', so.order_number, so.order_datetime), so.order_number, so.order_datetime, coalesce(sha2(cast(customer_id as string), 256), '-1'));

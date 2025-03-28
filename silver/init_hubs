@@ -1,0 +1,71 @@
+CREATE WIDGET TEXT acatalog DEFAULT "lhdev";  
+CREATE WIDGET TEXT sschema DEFAULT "hs_retail";
+
+use catalog ${acatalog};
+use schema ${sschema};
+
+create or replace table hub_loyalty_segment (
+load_source int,
+capture_timestamp timestamp,
+load_timestamp timestamp,
+initial_capture_timestamp timestamp,
+
+loyalty_segment_key int primary key,
+loyalty_segment_id int,
+loyalty_segment_description string
+);
+
+insert into hub_loyalty_segment(load_source, capture_timestamp, load_timestamp, initial_capture_timestamp, 
+                                loyalty_segment_key, loyalty_segment_id, loyalty_segment_description) 
+values (0, '1970-01-01', '1970-01-01', '1970-01-01', -1, -1, 'null');
+
+create or replace table hub_customer (
+load_source int,
+capture_timestamp timestamp,
+load_timestamp timestamp,
+initial_capture_timestamp timestamp,
+
+customer_key string primary key,
+customer_id int,
+customer_name string,
+tax_id string,
+tax_code string,
+loyalty_segment_key int
+);
+
+insert into hub_customer(load_source, capture_timestamp, load_timestamp, initial_capture_timestamp, 
+                         customer_key, customer_id, customer_name, tax_id, tax_code, loyalty_segment_key) 
+values (0, '1970-01-01', '1970-01-01', '1970-01-01', '-1', -1, 'null', 'null', 'null', -1);
+
+create or replace table hub_sales_order (
+load_source int,
+capture_timestamp timestamp,
+load_timestamp timestamp,
+initial_capture_timestamp timestamp,
+
+sales_order_key string primary key,
+sales_order_number bigint,
+order_datetime timestamp,
+customer_key string
+);
+
+insert into hub_sales_order(load_source, capture_timestamp, load_timestamp, initial_capture_timestamp, 
+                            sales_order_key, sales_order_number, order_datetime, customer_key) 
+values (0, '1970-01-01', '1970-01-01', '1970-01-01', '-1', -1, '1970-01-01', -1);
+
+create or replace table hub_product (
+load_source int,
+capture_timestamp timestamp,
+load_timestamp timestamp,
+initial_capture_timestamp timestamp,
+
+product_key string primary key,
+product_id string,
+product_name string,
+product_category string,
+product_unit string
+);
+
+insert into hub_product(load_source, capture_timestamp, load_timestamp, initial_capture_timestamp, 
+                        product_key, product_id, product_name, product_category, product_unit) 
+values (0, '1970-01-01', '1970-01-01', '1970-01-01', -1, 'null', 'null', 'null', 'null');

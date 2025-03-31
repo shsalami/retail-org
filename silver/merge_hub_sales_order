@@ -21,4 +21,5 @@ WHEN MATCHED and hso.customer_key <> sha2(customer_id, 256) THEN
              hso.customer_key = coalesce(sha2(cast(customer_id as string), 256), '-1')
 WHEN NOT MATCHED THEN 
   INSERT (load_source, capture_timestamp, load_timestamp, initial_capture_timestamp, sales_order_key, sales_order_number, order_datetime, customer_key) 
-  VALUES (1, so.capture_timestamp, current_timestamp(), so.capture_timestamp, concat_ws('#', so.order_number, so.order_datetime), so.order_number, so.order_datetime, coalesce(sha2(cast(customer_id as string), 256), '-1'));
+  VALUES (1, so.capture_timestamp, current_timestamp(), so.capture_timestamp, concat_ws('#', so.order_number, date_format(so.order_datetime, 'yMMddHHmmss')), 
+          so.order_number, so.order_datetime, coalesce(sha2(cast(customer_id as string), 256), '-1'));

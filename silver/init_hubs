@@ -10,7 +10,7 @@ capture_timestamp timestamp,
 load_timestamp timestamp,
 initial_capture_timestamp timestamp,
 
-loyalty_segment_key int primary key,
+loyalty_segment_key int primary key rely,
 loyalty_segment_id int,
 loyalty_segment_description string
 );
@@ -25,12 +25,12 @@ capture_timestamp timestamp,
 load_timestamp timestamp,
 initial_capture_timestamp timestamp,
 
-customer_key string primary key,
+customer_key string primary key rely,
 customer_id int,
 customer_name string,
 tax_id string,
 tax_code string,
-loyalty_segment_key int
+loyalty_segment_key int foreign key references hub_loyalty_segment rely
 );
 
 insert into hub_customer(load_source, capture_timestamp, load_timestamp, initial_capture_timestamp, 
@@ -43,10 +43,10 @@ capture_timestamp timestamp,
 load_timestamp timestamp,
 initial_capture_timestamp timestamp,
 
-sales_order_key string primary key,
+sales_order_key string primary key rely,
 sales_order_number bigint,
 order_datetime timestamp,
-customer_key string
+customer_key string foreign key references hub_customer rely
 );
 
 insert into hub_sales_order(load_source, capture_timestamp, load_timestamp, initial_capture_timestamp, 
@@ -59,7 +59,7 @@ capture_timestamp timestamp,
 load_timestamp timestamp,
 initial_capture_timestamp timestamp,
 
-product_key string primary key,
+product_key string primary key rely,
 product_id string,
 product_name string,
 product_category string,

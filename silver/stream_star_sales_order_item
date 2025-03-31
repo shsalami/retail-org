@@ -12,7 +12,7 @@ CREATE OR REFRESH STREAMING TABLE star_sales_order_item
   CONSTRAINT pk_star_sales_order_item primary key (sales_order_key, sales_order_item_seq)
 ) as
 SELECT 1 load_source, so.capture_timestamp, current_timestamp() load_timestamp,      
-       concat_ws('#', 1, so.order_number) sales_order_key, 
+       concat_ws('#', so.order_number, date_format(TIMESTAMP(from_unixtime(cast(so.order_datetime as long))),'yMMddHHmmss')) sales_order_key, 
        TIMESTAMP(from_unixtime(cast(so.order_datetime as long))) order_datetime,
        op.item_seq as sales_order_item_seq,
        concat_ws('#', 1, op.item.id) product_key,       
